@@ -1,0 +1,12 @@
+#version: '3.8'
+#services:
+#  management-center:
+#    image: hazelcast/management-center:latest
+#    container_name: hazelcast
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      # Tanpa authentication
+#      - MC_INIT_JSON={"clusters":[{"name":"hazelcast","address":"192.168.181.96:5701"}]}
+#      - MC_ADMIN_USER=admin
+#      - MC_ADMIN_PASSWORD= P@ssw0rd
