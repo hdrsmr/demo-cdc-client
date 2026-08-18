@@ -96,29 +96,6 @@ public class CustomerServiceImpl implements CustomerService {
         return mapToResponse(customer);
     }
 
-//    @Override
-//    public List<CustomerResponse> getAllFromCache() {
-//        log.info("Fetching all customers from cache");
-//        
-//        IMap<Integer, HazelcastJsonValue> cache = hazelcastInstance.getMap("customers");
-//        List<CustomerResponse> customers = new ArrayList<>();
-//        
-//        cache.forEach((key, value) -> {
-//            try {
-//                CustomerResponse response = objectMapper.readValue(value.toString(), CustomerResponse.class);
-//                customers.add(response);
-//            } catch (Exception e) {
-//                log.error("Error parsing customer from cache: {}", e.getMessage());
-//            }
-//        });
-//        
-//        log.info("Found {} customers in cache", customers.size());
-//        return customers;
-//    }
-
-    // ============================================
-    //  PRIVATE METHODS
-    // ============================================
 
     /**
      *  Tambahkan customer ke Hazelcast cache dengan konfigurasi LRU & TTL

@@ -18,7 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-//import com.hazelcast.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastJsonValue;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Configuration
 @ConditionalOnProperty(name = "debezium.enabled", havingValue = "true")
-public class DebeziumConfigV2 {
+public class DebeziumConfig {
 
     @Value("${debezium.connector.class}")
     private String connectorClass;
@@ -73,7 +73,7 @@ public class DebeziumConfigV2 {
 
     @Value("${debezium.topic.prefix:customer-server}")
     private String topicPrefix;
-    
+
     @Autowired
     private HazelcastInstance hazelcastInstance;
 
@@ -92,24 +92,24 @@ public class DebeziumConfigV2 {
         }
 
         Properties props = new Properties();
-        
+
         // Basic connector configuration
         props.setProperty("name", "sqlserver-cdc-connector");
         props.setProperty("connector.class", connectorClass);
-        
+
         // File-based schema history
         props.setProperty("schema.history.internal", "io.debezium.storage.file.history.FileSchemaHistory");
         props.setProperty("schema.history.internal.file.filename", "./target/schema_history.dat");
-        
+
         // Database names and topic prefix
         props.setProperty("database.names", databaseNames);
         props.setProperty("topic.prefix", topicPrefix);
-        
+
         // Offset storage
         props.setProperty("offset.storage", "org.apache.kafka.connect.storage.FileOffsetBackingStore");
         props.setProperty("offset.storage.file.filename", offsetStorageFile);
         props.setProperty("offset.flush.interval.ms", offsetFlushIntervalMs);
-        
+
         // Database connection
         props.setProperty("database.hostname", databaseHostname);
         props.setProperty("database.port", databasePort);
@@ -119,21 +119,21 @@ public class DebeziumConfigV2 {
         props.setProperty("database.server.name", databaseServerName);
         props.setProperty("database.encrypt", "false");
         props.setProperty("database.trustServerCertificate", "true");
-        
+
         // Table filtering
         props.setProperty("table.include.list", tableIncludeList);
         props.setProperty("schema.include.list", schemaIncludeList);
-        
+
         // Snapshot mode
         props.setProperty("snapshot.mode", "schema_only");
-        
+
         // Other configurations
         props.setProperty("decimal.handling.mode", "double");
         props.setProperty("binary.handling.mode", "bytes");
         props.setProperty("time.precision.mode", "adaptive_time_microseconds");
         props.setProperty("database.history.skip.unparseable.ddl", "true");
-        
-     // Di bagian Properties, tambahkan:
+
+        // Di bagian Properties, tambahkan:
         props.setProperty("snapshot.mode", "initial");
         props.setProperty("database.history.skip.unparseable.ddl", "true");
         props.setProperty("schema.history.internal.skip.unparseable.ddl", "true");
@@ -180,7 +180,7 @@ public class DebeziumConfigV2 {
 
             if (value instanceof Struct) {
                 Struct struct = (Struct) value;
-                
+
                 if (struct.schema().field("op") != null) {
                     processDataChangeEvent(struct);
                 } else {
@@ -189,25 +189,25 @@ public class DebeziumConfigV2 {
             } else {
                 log.warn("Value is not a Struct: {}", value.getClass().getName());
             }
-            
+
         } catch (Exception e) {
             log.error("Error processing change event: {}", e.getMessage(), e);
         }
     }
-    
+
     /**
      * Process data change event (INSERT, UPDATE, DELETE) - ONLY FOR CRUD
      */
     private void processDataChangeEvent(Struct struct) {
         try {
             String operation = struct.getString("op");
-            
+
             // SKIP snapshot events (tidak ditampilkan)
             if ("r".equals(operation)) {
                 // Snapshot event - tidak ditampilkan
                 return;
             }
-            
+
             //  SKIP jika bukan CRUD (c, u, d)
             if (!"c".equals(operation) && !"u".equals(operation) && !"d".equals(operation)) {
                 log.debug("Skipping non-CRUD operation: {}", operation);
@@ -223,7 +223,7 @@ public class DebeziumConfigV2 {
 
             Struct source = struct.getStruct("source");
             String table = source != null ? source.getString("table") : "unknown";
-          //  String db = source != null ? source.getString("db") : "unknown";
+            //  String db = source != null ? source.getString("db") : "unknown";
 
             switch (operation) {
                 case "c": // CREATE
@@ -273,39 +273,39 @@ public class DebeziumConfigV2 {
                 log.warn("  {} Data: null", label);
                 return;
             }
-            
+
             Integer customerId = struct.getInt32("customer_id");
             String customerCode = struct.getString("customer_code");
             String customerName = struct.getString("customer_name");
             String email = struct.getString("email");
             String city = struct.getString("city");
-            
+
             log.info("  {} Data:", label);
             log.info("    ID: {}", customerId);
             log.info("    Code: {}", customerCode);
             log.info("    Name: {}", customerName);
             log.info("    Email: {}", email);
             log.info("    City: {}", city);
-            
+
         } catch (Exception e) {
             log.warn("Error printing customer data: {}", e.getMessage());
         }
     }
- 
+
 
     private void handleCreate(Struct after) {
         try {
             if (after == null) return;
-            
+
             Integer customerId = after.getInt32("customer_id");
             String customerCode = after.getString("customer_code");
             String customerName = after.getString("customer_name");
             String email = after.getString("email");
             String city = after.getString("city");
-            
-            log.info("📝 New customer created: ID={}, Code={}, Name={}", 
-                customerId, customerCode, customerName);
-            
+
+            log.info("📝 New customer created: ID={}, Code={}, Name={}",
+                    customerId, customerCode, customerName);
+
             // ✅ Simpan sebagai JSON dengan String date
             Map<String, Object> customerMap = new HashMap<>();
             customerMap.put("customerId", customerId);
@@ -316,35 +316,35 @@ public class DebeziumConfigV2 {
             customerMap.put("createdDate", LocalDateTime.now().toString()); // ✅ String
             customerMap.put("updatedDate", LocalDateTime.now().toString()); // ✅ String
             customerMap.put("source", "HAZELCAST_CACHE");
-            
+
             ObjectMapper mapper = new ObjectMapper();
             String jsonValue = mapper.writeValueAsString(customerMap);
             HazelcastJsonValue jsonCustomer = new HazelcastJsonValue(jsonValue);
-            
+
             IMap<Integer, HazelcastJsonValue> cache = hazelcastInstance.getMap("customers");
             cache.put(customerId, jsonCustomer);
-            
-            log.info("✅ Customer added to Hazelcast cache as JSON: ID={}, Name={}", 
-                customerId, customerName);
-            
+
+            log.info("✅ Customer added to Hazelcast cache as JSON: ID={}, Name={}",
+                    customerId, customerName);
+
         } catch (Exception e) {
             log.error("Error handling CREATE event: {}", e.getMessage(), e);
         }
     }
-    
+
     private void handleUpdate(Struct after) {
         try {
             if (after == null) return;
-            
+
             Integer customerId = after.getInt32("customer_id");
             String customerCode = after.getString("customer_code");
             String customerName = after.getString("customer_name");
             String email = after.getString("email");
             String city = after.getString("city");
-            
-            log.info(" Customer updated: ID={}, Code={}, Name={}", 
-                customerId, customerCode, customerName);
-            
+
+            log.info(" Customer updated: ID={}, Code={}, Name={}",
+                    customerId, customerCode, customerName);
+
             // ✅ Simpan sebagai JSON
             Map<String, Object> customerMap = new HashMap<>();
             customerMap.put("customerId", customerId);
@@ -355,17 +355,17 @@ public class DebeziumConfigV2 {
             customerMap.put("createdDate", LocalDateTime.now().toString());
             customerMap.put("updatedDate", LocalDateTime.now().toString());
             customerMap.put("source", "HAZELCAST_CACHE_UPDATED");
-            
+
             ObjectMapper mapper = new ObjectMapper();
             String jsonValue = mapper.writeValueAsString(customerMap);
             HazelcastJsonValue jsonCustomer = new HazelcastJsonValue(jsonValue);
-            
+
             IMap<Integer, HazelcastJsonValue> cache = hazelcastInstance.getMap("customers");
             cache.put(customerId, jsonCustomer);
-            
-            log.info("Customer updated in Hazelcast cache: ID={}, Name={}", 
-                customerId, customerName);
-            
+
+            log.info("Customer updated in Hazelcast cache: ID={}, Name={}",
+                    customerId, customerName);
+
         } catch (Exception e) {
             log.error("Error handling UPDATE event: {}", e.getMessage(), e);
         }
@@ -374,22 +374,22 @@ public class DebeziumConfigV2 {
     private void handleDelete(Struct before) {
         try {
             if (before == null) return;
-            
+
             Integer customerId = before.getInt32("customer_id");
             String customerCode = before.getString("customer_code");
-            
+
             log.info("📝 Customer deleted: ID={}, Code={}", customerId, customerCode);
-            
+
             // ✅ Hapus dari cache
             IMap<Integer, HazelcastJsonValue> cache = hazelcastInstance.getMap("customers");
             cache.remove(customerId);
-            
+
             log.info("✅ Customer removed from Hazelcast cache: ID={}", customerId);
-            
+
         } catch (Exception e) {
             log.error("Error handling DELETE event: {}", e.getMessage(), e);
         }
     }
-    
-    
+
+
 }

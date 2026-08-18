@@ -11,12 +11,12 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication
 @EnableCaching
 @OpenAPIDefinition(
-    info = @Info(
-        title = "CDC with Debezium and Hazelcast API",
-        version = "1.0.0",
-        description = "Change Data Capture with Debezium Embedded, Hazelcast Cache, and Spring Boot"
-    ),
-    servers = @Server(url = "http://localhost:8888", description = "Local Server")
+        info = @Info(
+                title = "CDC with Debezium and Hazelcast API",
+                version = "1.0.0",
+                description = "Change Data Capture with Debezium Embedded, Hazelcast Cache, and Spring Boot"
+        ),
+        servers = @Server(url = "http://localhost:8888", description = "Local Server")
 )
 public class CdcApplication {
 

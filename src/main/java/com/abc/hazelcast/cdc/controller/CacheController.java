@@ -114,19 +114,7 @@ public class CacheController {
         return ResponseEntity.ok(cacheService.getCacheStats());
     }
     
-    //add
-//    @DeleteMapping("/clear")
-//    public ResponseEntity<String> clearCache() {
-//        cacheService.clearAllCache();
-//        return ResponseEntity.ok("All cache cleared");
-//    }
-//    
-//    @DeleteMapping("/evict/{key}")
-//    public ResponseEntity<String> evictCache(@PathVariable String key) {
-//        cacheService.evictCache(key);
-//        return ResponseEntity.ok("Cache evicted for key: " + key);
-//    }
-    
+
     @Operation(summary = "Clear all cache")
     @DeleteMapping("/clear")
     public ResponseEntity<String> clearAllCache() {

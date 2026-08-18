@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Customer Management", description = "APIs for managing customers")
-public class Customer2Controller {
+public class CustomerController {
 
     private final CustomerService customerService;
    
